@@ -11,5 +11,6 @@ func setupUserRoutes(api fiber.Router, dbPool repositories.Db) {
 	userService := services.NewUserService(dbPool)
 	handler := handlers.NewUserHandler(*userService)
 	api.Post("", handler.CreateNewUser)
+	api.Post("login", handler.Authenticate)
 	api.Get(":userId", handler.GetUserById)
 }

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/dfriveraa/glowing-octo-memory/app/internal/adapters/repositories"
@@ -41,3 +42,19 @@ func (us *UserService) GetUserById(userId int) (*domain.User, error) {
 	}
 	return user, err
 }
+
+func (us *UserService) Authenticate(email string, plainPassword string) (*domain.User, error) {
+	user, err := us.repo.GetByEmail(email)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+
+	}
+	successAuth := us.securityService.comparePassword(plainPassword, user.Password)
+	if successAuth {
+		return user, nil
+	} else {
+		return nil, fmt.Errorf("invalid credentials")
+	}
+}
+

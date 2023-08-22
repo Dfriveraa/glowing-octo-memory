@@ -19,14 +19,41 @@ func NewUserHandler(us services.UserService) *userHandler {
 }
 
 func (us *userHandler) CreateNewUser(c *fiber.Ctx) error {
-	newUser := domain.User{Name: "John", Surname: "Doe", Email: "danielf.r97@gmail.com", Password: "123456"}
-	err := us.service.CreateUser(&newUser)
+	newUser := domain.User{}
+	var err error
+	err = c.BodyParser(&newUser)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"Detail": "Could not parse the body",
+		})
+	}
+	err = us.service.CreateUser(&newUser)
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{
 			"Detail": "Could not create the user",
 		})
 	}
-	return c.Status(200).JSON(newUser)
+	userResponse := domain.HidePassword(&newUser)
+	return c.Status(200).JSON(userResponse)
+}
+
+func (us *userHandler) Authenticate(c *fiber.Ctx) error {
+	user := domain.UserLogin{}
+	var err error
+	err = c.BodyParser(&user)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"Detail": "Could not parse the login body",
+		})
+	}
+	userLogged, err := us.service.Authenticate(user.Email, user.Password)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"Detail": "Could not validate credentials",
+		})
+	}
+	userResponse := domain.HidePassword(userLogged)
+	return c.Status(200).JSON(userResponse)
 }
 
 func (us *userHandler) GetUserById(c *fiber.Ctx) error {
@@ -44,5 +71,6 @@ func (us *userHandler) GetUserById(c *fiber.Ctx) error {
 			"Detail": "User not found",
 		})
 	}
-	return c.Status(200).JSON(user)
+	userResponse := domain.HidePassword(user)
+	return c.Status(200).JSON(userResponse)
 }

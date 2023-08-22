@@ -8,6 +8,27 @@ type User struct {
 	UpdatedAt time.Time `json:"updated_at"`
 	Name      string    `json:"name"`
 	Surname   string    `json:"surname"`
-	Email     string    `json:"email"`
-	Password  string    `json:"-"`
+	Email     string    `json:"email" gorm:"uniqueIndex"`
+	Password  string    `json:"password"`
+}
+
+type UserLogin struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type UserResponse struct {
+	ID      uint   `json:"id"`
+	Name    string `json:"name"`
+	Surname string `json:"surname"`
+	Email   string `json:"email"`
+}
+
+func HidePassword(user *User) *UserResponse {
+	return &UserResponse{
+		ID:      user.ID,
+		Name:    user.Name,
+		Surname: user.Surname,
+		Email:   user.Email,
+	}
 }

@@ -1,6 +1,10 @@
 package services
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"fmt"
+
+	"golang.org/x/crypto/bcrypt"
+)
 
 type passwordService struct {
 }
@@ -11,7 +15,7 @@ func newPasswordService() *passwordService {
 
 func (s *passwordService) hashPassword(password string) (string, error) {
 	// generate a new salt
-	salt, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	salt, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 	if err != nil {
 		return "", err
 	}
@@ -20,7 +24,7 @@ func (s *passwordService) hashPassword(password string) (string, error) {
 	return string(salt), nil
 }
 
-// func (s *passwordService) comparePassword(password string, hashedPassword string) bool {
-// 	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
-// 	return err == nil
-// }
+func (s *passwordService) comparePassword(password string, hashedPassword string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	return err == nil
+}

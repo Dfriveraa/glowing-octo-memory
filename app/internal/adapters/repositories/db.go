@@ -1,6 +1,9 @@
 package repositories
 
 import (
+	"fmt"
+
+	config "github.com/dfriveraa/glowing-octo-memory/app/internal/core"
 	"github.com/dfriveraa/glowing-octo-memory/app/internal/core/domain"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -13,7 +16,14 @@ type Db struct {
 
 func InitDB() *Db {
 	var err error
-	dsn := "user=memory password=K4T7VpOXrDxe dbname=octomemory host=ep-royal-star-125567.us-west-2.aws.neon.tech sslmode=verify-full"
+
+	dsn := fmt.Sprintf(
+		"user=%s password=%s dbname=%s host=%s sslmode=verify-full",
+		config.Settings.PgUser,
+		config.Settings.PgPassword,
+		config.Settings.PgDBName,
+		config.Settings.PgHost,
+	)
 	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
 	})
