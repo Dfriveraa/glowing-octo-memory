@@ -13,6 +13,7 @@ type config struct {
 	PgPassword string `env:"PG_PASSWORD"`
 	PgDBName   string `env:"PG_DBNAME"`
 	PgHost     string `env:"PG_HOST"`
+	JWTSecret  string `env:"JWT_SECRET"`
 }
 
 func new() config {

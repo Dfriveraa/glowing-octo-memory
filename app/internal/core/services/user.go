@@ -10,13 +10,13 @@ import (
 
 type UserService struct {
 	repo            repositories.UserRepo
-	securityService passwordService
+	securityService PasswordService
 }
 
 func NewUserService(dbClient repositories.Db) *UserService {
 	return &UserService{
 		repo:            *repositories.NewUserRepo(dbClient),
-		securityService: *newPasswordService(),
+		securityService: *NewPasswordService(),
 	}
 }
 
@@ -43,18 +43,18 @@ func (us *UserService) GetUserById(userId int) (*domain.User, error) {
 	return user, err
 }
 
-func (us *UserService) Authenticate(email string, plainPassword string) (*domain.User, error) {
+func (us *UserService) Authenticate(email string, plainPassword string) (string, error) {
 	user, err := us.repo.GetByEmail(email)
 	if err != nil {
 		log.Println(err)
-		return nil, err
+		return "", err
 
 	}
 	successAuth := us.securityService.comparePassword(plainPassword, user.Password)
 	if successAuth {
-		return user, nil
+		token := us.securityService.generateToken(user)
+		return token, nil
 	} else {
-		return nil, fmt.Errorf("invalid credentials")
+		return "", fmt.Errorf("Invalid credentials")
 	}
 }
-
