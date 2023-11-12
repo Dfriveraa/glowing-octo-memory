@@ -45,7 +45,6 @@ func CheckRole(role string) func(*fiber.Ctx) error {
 			return c.Status(403).JSON(fiber.Map{
 				"detail": "You are not authorized to access this resource"})
 		}
-		// Proceed with the next middleware
 		return c.Next()
 	}
 }
