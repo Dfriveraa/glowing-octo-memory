@@ -1,8 +1,10 @@
 package handlers
 
 import (
-	"fmt"
+	"log"
 	"strconv"
+
+	"strings"
 
 	"github.com/dfriveraa/glowing-octo-memory/app/internal/core/domain"
 	"github.com/dfriveraa/glowing-octo-memory/app/internal/core/services"
@@ -20,13 +22,25 @@ func NewUserHandler(us services.UserService) *userHandler {
 }
 
 func (us *userHandler) CreateNewUser(c *fiber.Ctx) error {
-	newUser := domain.User{}
+	registerUser := domain.RegisterUser{}
 	var err error
-	err = c.BodyParser(&newUser)
+	err = c.BodyParser(&registerUser)
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{
 			"detail": "Could not parse the body",
 		})
+	}
+	if registerUser.Password != registerUser.ConfirmPassword {
+		return c.Status(400).JSON(fiber.Map{
+			"detail": "Passwords do not match",
+		})
+	}
+	newUser := domain.User{
+		Name:     registerUser.Name,
+		Email:    registerUser.Email,
+		Password: registerUser.Password,
+		Role:     registerUser.Role,
+		Surname:  registerUser.Surname,
 	}
 	err = us.service.CreateUser(&newUser)
 	if err != nil {
@@ -59,9 +73,67 @@ func (us *userHandler) Authenticate(c *fiber.Ctx) error {
 	})
 }
 
+func (us *userHandler) GetCurrentUser(c *fiber.Ctx) error {
+	a := c.Locals("current-user")
+	claims := a.(*services.CustomClaims)
+	profile := c.Query("profile")
+	user, err := us.service.GetUserById(claims.Id)
+	if err != nil {
+		return c.Status(404).JSON(fiber.Map{
+			"detail": "User not found",
+		})
+	}
+
+	userResponse := domain.HidePassword(user)
+	if profile == "true" {
+		url, err := us.service.GetProfilePicture(claims.Id)
+		if err != nil {
+			log.Println("Could not get profile photo for user:%v %v", err)
+		} else {
+			userResponse.ProfilePicture = url
+		}
+	}
+	return c.Status(200).JSON(userResponse)
+}
+
+func (us *userHandler) UploadProfilePicture(c *fiber.Ctx) error {
+	a := c.Locals("current-user")
+	claims := a.(*services.CustomClaims)
+	userId := claims.Id
+	file, err := c.FormFile("profile_picture")
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"detail": "Could not parse the file",
+		})
+	}
+	names := strings.Split(file.Filename, ".")
+	err = us.service.UploadProfilePicture(userId, names[len(names)-1], file)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"detail": "Could not upload the file",
+		})
+	}
+	return c.Status(200).JSON(fiber.Map{
+		"detail": "File uploaded successfully",
+	})
+}
+
+func (us *userHandler) GetProfileUrl(c *fiber.Ctx) error {
+	a := c.Locals("current-user")
+	claims := a.(*services.CustomClaims)
+	userId := claims.Id
+	url, err := us.service.GetProfilePicture(userId)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"detail": "Could not get the url",
+		})
+	}
+	return c.Status(200).JSON(fiber.Map{
+		"url": url,
+	})
+}
+
 func (us *userHandler) GetUserById(c *fiber.Ctx) error {
-	a := c.Locals("user")
-	fmt.Println(a)
 	id := c.Params("userId")
 	userId, err := strconv.Atoi(id)
 	if err != nil {
@@ -78,12 +150,4 @@ func (us *userHandler) GetUserById(c *fiber.Ctx) error {
 	}
 	userResponse := domain.HidePassword(user)
 	return c.Status(200).JSON(userResponse)
-}
-
-func (us *userHandler) GetDaniel(c *fiber.Ctx) error {
-	currentUser := c.Locals("current-user")
-	return c.Status(200).JSON(fiber.Map{
-		"detail": currentUser,
-	})
-
 }

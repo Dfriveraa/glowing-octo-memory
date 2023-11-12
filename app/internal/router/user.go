@@ -13,7 +13,8 @@ func setupUserRoutes(api fiber.Router, dbPool repositories.Db) {
 	handler := handlers.NewUserHandler(*userService)
 	api.Post("", handler.CreateNewUser)
 	api.Post("login", handler.Authenticate)
-	api.Get("daniel", middlewares.AddCurrentUser, handler.GetDaniel)
-	api.Get(":userId", middlewares.CheckRole("SuperAdmin"), handler.GetUserById)
+	api.Get("me", middlewares.AddCurrentUser, handler.GetCurrentUser)
+	api.Put("profile", middlewares.CheckRole("admin"), handler.UploadProfilePicture)
+	api.Get(":userId", middlewares.CheckRole("admin"), handler.GetUserById)
 
 }
