@@ -88,7 +88,7 @@ func (us *userHandler) GetCurrentUser(c *fiber.Ctx) error {
 	if profile == "true" {
 		url, err := us.service.GetProfilePicture(claims.Id)
 		if err != nil {
-			log.Println("Could not get profile photo for user:%v %v", err)
+			log.Printf("Could not get profile photo for user: %v", err)
 		} else {
 			userResponse.ProfilePicture = url
 		}

@@ -36,6 +36,10 @@ func NewBucketBasics() *BucketClient {
 
 func (basics BucketClient) UploadFile(bucketName string, objectKey string, file *multipart.FileHeader) error {
 	content, err := file.Open()
+	if err != nil {
+		log.Printf("Couldn't read the file %v to %v:%v. Here's why: %v\n",
+			objectKey, bucketName, objectKey, err)
+	}
 	_, err = basics.S3Client.PutObject(context.TODO(), &s3.PutObjectInput{
 		Bucket: aws.String(bucketName),
 		Key:    aws.String(objectKey),
