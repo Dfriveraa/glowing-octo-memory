@@ -18,7 +18,7 @@ func main() {
 	dbInstance = repositories.InitDB()
 	defer dbInstance.Close()
 	application.Use(logger.New(logger.Config{
-		Format:     "${time} - ${status} ${latency} ${method} ${path}\n",
+		Format:     "${time} ${status} ${latency} ${method} ${path}\n",
 		TimeFormat: "15:04:05",
 		TimeZone:   "America/New_York",
 	}))
